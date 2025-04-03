@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B692C8C2D9DD4F800A9FF8C /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 2B692C8B2D9DD4F800A9FF8C /* SQLite */; };
 		2BD425092D9DAB2600F0646A /* CocoaMQTT in Frameworks */ = {isa = PBXBuildFile; productRef = 2BD425082D9DAB2600F0646A /* CocoaMQTT */; };
 		2BD4250B2D9DAB2600F0646A /* CocoaMQTTWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 2BD4250A2D9DAB2600F0646A /* CocoaMQTTWebSocket */; };
 		2BD425112D9DB69000F0646A /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 2BD425102D9DB69000F0646A /* Starscream */; };
@@ -29,6 +30,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B692C8C2D9DD4F800A9FF8C /* SQLite in Frameworks */,
 				2BD4250B2D9DAB2600F0646A /* CocoaMQTTWebSocket in Frameworks */,
 				2BD425092D9DAB2600F0646A /* CocoaMQTT in Frameworks */,
 				2BD425112D9DB69000F0646A /* Starscream in Frameworks */,
@@ -77,6 +79,7 @@
 				2BD425082D9DAB2600F0646A /* CocoaMQTT */,
 				2BD4250A2D9DAB2600F0646A /* CocoaMQTTWebSocket */,
 				2BD425102D9DB69000F0646A /* Starscream */,
+				2B692C8B2D9DD4F800A9FF8C /* SQLite */,
 			);
 			productName = "Dear Lampi";
 			productReference = 2B082DAE2D9C79C50049F778 /* Dear Lampi.app */;
@@ -109,6 +112,7 @@
 			packageReferences = (
 				2BD425072D9DAB2600F0646A /* XCRemoteSwiftPackageReference "CocoaMQTT" */,
 				2BD4250F2D9DB68F00F0646A /* XCRemoteSwiftPackageReference "Starscream" */,
+				2B692C8A2D9DD4F800A9FF8C /* XCRemoteSwiftPackageReference "SQLite" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2B082DAF2D9C79C50049F778 /* Products */;
@@ -342,6 +346,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		2B692C8A2D9DD4F800A9FF8C /* XCRemoteSwiftPackageReference "SQLite" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.3;
+			};
+		};
 		2BD425072D9DAB2600F0646A /* XCRemoteSwiftPackageReference "CocoaMQTT" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/emqx/CocoaMQTT.git";
@@ -361,6 +373,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2B692C8B2D9DD4F800A9FF8C /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B692C8A2D9DD4F800A9FF8C /* XCRemoteSwiftPackageReference "SQLite" */;
+			productName = SQLite;
+		};
 		2BD425082D9DAB2600F0646A /* CocoaMQTT */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2BD425072D9DAB2600F0646A /* XCRemoteSwiftPackageReference "CocoaMQTT" */;

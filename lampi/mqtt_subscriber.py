@@ -4,6 +4,7 @@ import threading
 import os
 from kivy.app import App
 from kivy.clock import Clock
+import json
 
 # Purpose: script that is setting up the mqtt client, expecting to receive a base64 encoded image
 

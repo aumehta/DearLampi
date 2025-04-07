@@ -6,16 +6,27 @@ from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.uix.image import Image
 from paho.mqtt.client import Client
+from dear_lampi_light_mode import twinkle, stop_led
 import base64
 import threading
 import os
+import json
+from PIL import Image, ImageDraw, ImageFont
+import io
 
 # This file is setting the mqtt client to listen in on the topic dearLampi/incomingMessage and defines the logic for
 # the screen manager when a new message is received.
 
+def get_device_id():
+    mac_addr = open(DEVICE_ID_FILENAME).read().strip()
+    return mac_addr.replace(':', '')
+
+DEVICE_ID_FILENAME = '/sys/class/net/eth0/address'
+DEVICE_ID = get_device_id()
+
 IMAGE_PATH = "/home/pi/dearLampi/lampi/received_images/dearLampi_image_decoded.png"
 MQTT_BROKER = "localhost"
-MQTT_TOPIC = "dearLampi/incomingMessage"
+MQTT_TOPIC = "swift/#"
 MQTT_PORT = 1883
 
 class BouncingLabel(Label):
@@ -41,6 +52,7 @@ class Screen2(Screen):
 
     def on_touch_down(self, touch):
 #       self.manager.transition = FadeTransition(duration=1)
+        stop_led()
         self.manager.current = "display message"
         return super().on_touch_down(touch)
 
@@ -80,16 +92,36 @@ class dear_lampiApp(App):
 
     def setup_mqtt(self):
         def on_message(client, userdata, msg):
-            print("MQTT message received.")
+            print("Received on topic:", msg.topic)
             try:
+                payload = json.loads(msg.payload.decode())
+                image_data = payload["background"]
+                light_mode = payload["alert_light"]
+                message = payload["message"]
+
                 # decode the image data and save it in the file path
-                image_data = base64.b64decode(msg.payload)
                 with open(IMAGE_PATH, "wb") as img_file:
-                    img_file.write(image_data)
+                    img_file.write(base64.b64decode(image_data))
                 print("Image written to:", IMAGE_PATH)
 
+                # Overlay the message text
+                overlay_text_on_image(IMAGE_PATH, message, IMAGE_PATH)
+                print("Message added to image.")
+
+                if light_mode == "twinkle":
+                    twinkle()
+
+                #if light_mode == "rainbow":
+                 #   set_rainbow()
+                app = App.get_running_app()
+                if app is None:
+                    print("App instance is None — Kivy app may not be running yet")
+                else:
+                    print("else")
+                    Clock.schedule_once(lambda dt: app.on_new_message(), 0)
+
                 # Switch screen from screensaver → incoming message
-                Clock.schedule_once(lambda dt: self.on_new_message())
+                #Clock.schedule_once(lambda dt: self.on_new_message())
 
             except Exception as e:
                 print("Error handling image:", e)
@@ -98,6 +130,40 @@ class dear_lampiApp(App):
         client.on_message = on_message
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
         client.subscribe(MQTT_TOPIC)
+        print(MQTT_TOPIC)
         print("MQTT client connected and listening...")
 
         client.loop_forever()
+
+# method to add text to image
+def overlay_text_on_image(image_path, text, output_path):
+    image = Image.open(image_path).convert("RGBA")
+    draw = ImageDraw.Draw(image)
+
+    # Load font
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=30)
+    except:
+        font = ImageFont.load_default()
+
+    # Get text size and position
+#    text_width, text_height = draw.textsize(text, font=font)
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+
+    x = (image.width - text_width) // 2
+    y = (image.height - text_height) //2
+
+    # Optional: Add a black rectangle behind text for contrast
+    #padding = 10
+    #draw.rectangle(
+     #   [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
+      #  fill=(0, 0, 0, 180)
+    #)
+
+    # Draw the text in white
+    draw.text((x, y), text, font=font, fill="black")
+
+    # Save the new image
+    image.save(output_path)

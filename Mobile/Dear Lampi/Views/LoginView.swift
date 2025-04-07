@@ -3,15 +3,13 @@ import SwiftUI
 struct LoginView: View {
     @State private var username = ""
     @State private var deviceID = ""
-    @State private var ipAddress = "" // User will input IP address
-    @State private var friends = "" // User will input IP address
-    @State private var uniqueCode = UUID().uuidString.prefix(8).description // Generate short unique code
-    @State private var isNavigationActive = false // State to control navigation
+    @State private var ipAddress = ""
+    @State private var uniqueCode = UUID().uuidString.prefix(8).description
+    @State private var isNavigationActive = false
+    @State private var showAlert = false
 
     var body: some View {
-        NavigationView {
             ZStack {
-                // Background radial gradient
                 RadialGradient(
                     gradient: Gradient(colors: [Color(hex: "FF996D"), Color(hex: "F99D9D")]),
                     center: .center,
@@ -20,58 +18,67 @@ struct LoginView: View {
                 )
                 .ignoresSafeArea()
                 
-                VStack(spacing: 20) {
-                    Text("Login")
-                        .font(.custom("Cantora One", size: 28))
-                        .bold()
-                        .padding(.bottom, 10)
-                        .foregroundColor(.white)
+                VStack(spacing: 20){
+                    Image("dear_lampi_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
                     
-                    TextField("Enter Username", text: $username)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding()
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(10)
+                    Text("Dear Lampi")
+                        .font(.custom("Cantora One", size: 40))
+                        .fontWeight(.heavy)
+                        .foregroundColor(Color(hex: "530000"))
 
-                    TextField("Enter Device ID", text: $deviceID)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding()
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(10)
-
-                    TextField("Enter IP Address", text: $ipAddress)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding()
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(10)
-
-                    NavigationLink(destination: CraftPageView(currentUsername: username), isActive: $isNavigationActive) {
-                        EmptyView()
-                    }
-
-                    Button(action: {
-                        saveUser()
-                    }) {
-                        Text("Generate & Save")
-                            .font(.custom("Cantora One", size: 18))
+                    // Login Form
+                    VStack(spacing: 15) {
+                        TextField("Enter Username", text: $username)
                             .padding()
-                            .frame(width: 200)
-                            .background(Color.pink)
-                            .foregroundColor(.white)
+                            .background(Color.white) // Background color is white
                             .cornerRadius(10)
+                            .foregroundColor(Color(hex: "530000")) // Text color set to your hex value
+
+                        TextField("Enter Device ID", text: $deviceID)
+                            .padding()
+                            .background(Color.white) // Background color is white
+                            .cornerRadius(10)
+                            .foregroundColor(Color(hex: "530000")) // Text color set to your hex value
+
+                        TextField("Enter IP Address", text: $ipAddress)
+                            .padding()
+                            .background(Color.white) // Background color is white
+                            .cornerRadius(10)
+                            .foregroundColor(Color(hex: "530000")) // Text color set
+                        
+                        NavigationLink(destination: CraftPageView(currentUsername: username), isActive: $isNavigationActive) {
+                            EmptyView()
+                        }
+                        
+                        Button(action: {
+                            if username.isEmpty || ipAddress.isEmpty {
+                                showAlert = true
+                            } else {
+                                saveUser()
+                            }
+                        }) {
+                            Text("Create User")
+                                .font(.custom("Cantora One", size: 18))
+                                .padding()
+                                .frame(width: 200)
+                                .background(Color(hex: "530000"))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        .alert(isPresented: $showAlert) {
+                            Alert(title: Text("Invalid Input"), message: Text("Username and IP Address cannot be empty."), dismissButton: .default(Text("OK")))
+                        }
                     }
+                    .padding(.horizontal)
+                    .navigationBarBackButtonHidden(true)
                 }
-                .padding(.horizontal)
-            }
         }
     }
-
+    
     func saveUser() {
-        if username.isEmpty || ipAddress.isEmpty {
-            print("Username or IP Address cannot be empty")
-            return
-        }
-
         DatabaseManager.shared.addUser(
             username: username,
             deviceID: deviceID,
@@ -82,12 +89,9 @@ struct LoginView: View {
     }
 }
 
-struct NextView: View {
-    var body: some View {
-        Text("Welcome to the Next View!")
-            .font(.largeTitle)
-            .bold()
-            .padding()
+struct LoginView_Previews: PreviewProvider {
+    static var previews: some View {
+        LoginView()
     }
 }
 

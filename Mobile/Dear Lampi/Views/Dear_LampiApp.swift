@@ -11,7 +11,7 @@ import SwiftUI
 struct Dear_LampiApp: App {
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            LoginHeaderView()
         }
     }
 }

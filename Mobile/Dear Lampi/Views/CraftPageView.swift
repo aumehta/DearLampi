@@ -11,14 +11,13 @@ struct CraftPageView: View {
     var currentUsername: String
     
     private let backgrounds = ["bg1", "bg2"]
-    private let alerts = ["Rainbo", "Heartbeat", "Twinkle"]
+    private let alerts = ["Rainbow", "Heartbeat", "Twinkle"]
     
     init(currentUsername: String) {
         self.currentUsername = currentUsername
     }
     
     var body: some View {
-        NavigationView {
             ZStack {
                 RadialGradient(
                     gradient: Gradient(colors: [Color(hex: "FF996D"), Color(hex: "F99D9D")]),
@@ -30,20 +29,23 @@ struct CraftPageView: View {
                 
                 VStack(spacing: 20) {
                     Text("Send a Message")
-                        .font(.custom("Cantora One", size: 28))
+                        .font(.custom("Cantora One", size: 30))
                         .bold()
+                        .foregroundColor(Color(hex: "530000"))
                         .padding(.bottom, 10)
+                        .padding(.top, 10)
                     
                     VStack(alignment: .leading, spacing: 10) {
                         Text("My Friends")
                             .font(.custom("Cantora One", size: 18))
+                            .foregroundColor(Color(hex: "530000"))
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
                         HStack(spacing: 15) {
                             Button(action: { showAddFriendModal.toggle() }) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 30, weight: .bold))
-                                    .foregroundColor(.black)
+                                    .foregroundColor(Color(hex: "530000"))
                                     .frame(width: 70, height: 70)
                                     .background(Color.white.opacity(0.5))
                                     .clipShape(Circle())
@@ -55,7 +57,7 @@ struct CraftPageView: View {
                                     VStack {
                                         Text(friend)
                                             .font(.custom("Cantora One", size: 16))
-                                            .foregroundColor(.black)
+                                            .foregroundColor(Color(hex: "530000"))
                                     }
                                     .frame(width: 70, height: 70)
                                     .background(selectedFriend == friend ? Color.white.opacity(0.5) : Color.white.opacity(0.2))
@@ -71,6 +73,7 @@ struct CraftPageView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Background")
                             .font(.custom("Cantora One", size: 18))
+                            .foregroundColor(Color(hex: "530000"))
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -78,7 +81,7 @@ struct CraftPageView: View {
                                 ForEach(backgrounds, id: \.self) { bg in
                                     Image(bg)
                                         .resizable()
-                                        .frame(width: 80, height: 50)
+                                        .frame(width: 80, height: 80)
                                         .clipShape(RoundedRectangle(cornerRadius: 10))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 10)
@@ -95,6 +98,7 @@ struct CraftPageView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Alert Light")
                             .font(.custom("Cantora One", size: 18))
+                            .foregroundColor(Color(hex: "530000"))
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
                         HStack(spacing: 15) {
@@ -104,7 +108,7 @@ struct CraftPageView: View {
                                         .font(.custom("Cantora One", size: 16))
                                         .foregroundColor(.white)
                                         .padding()
-                                        .background(selectedAlert == alert ? Color.black.opacity(0.8) : Color.black.opacity(0.6))
+                                        .background(selectedAlert == alert ? Color(hex: "530000").opacity(0.8) : Color(hex: "530000").opacity(0.4))
                                         .cornerRadius(10)
                                 }
                             }
@@ -137,7 +141,7 @@ struct CraftPageView: View {
                                 .font(.custom("Cantora One", size: 18))
                                 .padding()
                                 .frame(width: 150)
-                                .background(Color.pink)
+                                .background(Color(hex: "530000"))
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                         }
@@ -148,10 +152,10 @@ struct CraftPageView: View {
             .sheet(isPresented: $showAddFriendModal) {
                 AddFriendModal(uniqueCode: $uniqueCode, friends: $friends, currentUsername: currentUsername, onFriendAdded: fetchFriends)
             }
+            .navigationBarBackButtonHidden(true)  // Hide the back button
             .onAppear {
                 fetchFriends()
             }
-        }
     }
     
     // In CraftPageView
@@ -164,6 +168,7 @@ struct CraftPageView: View {
 
 
 // Modal View for Entering Unique Code
+
 struct AddFriendModal: View {
     @Binding var uniqueCode: String
     @Binding var friends: [String]
@@ -174,44 +179,52 @@ struct AddFriendModal: View {
     var onFriendAdded: () -> Void  // Add this callback
     
     var body: some View {
-        VStack {
-            Text("Insert Unique Code")
-                .font(.title2)
-                .bold()
-                .padding()
-            
-            TextField("Enter unique code", text: $uniqueCode)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
+        ZStack {
+            // Background gradient
+            Color(hex: "FFF5F5")
+                            .ignoresSafeArea()
+            VStack {
+                Text("Insert Unique Code")
+                    .font(.custom("Cantora One", size: 30))
+                    .foregroundColor(Color(hex: "530000"))
+                    .bold()
                     .padding()
-            }
-            
-            Button(action: {
-                addFriend()
-            }) {
-                Text("Submit")
-                    .font(.headline)
+                
+                TextField("Enter unique code", text: $uniqueCode)
                     .padding()
-                    .frame(width: 150)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
+                    .background(Color.white) // Background color of TextField is white
                     .cornerRadius(10)
+                    .foregroundColor(Color(hex: "530000"))
+                
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .padding()
+                }
+                
+                Button(action: {
+                    addFriend()
+                }) {
+                    Text("Submit")
+                        .font(.custom("Cantora One", size: 18))
+                        .padding()
+                        .frame(width: 150)
+                        .background(Color(hex: "530000"))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding()
+                
+                if isFriendAdded {
+                    Text("Friend added successfully!")
+                        .foregroundColor(.green)
+                        .padding()
+                }
+                
+                Spacer()
             }
             .padding()
-            
-            if isFriendAdded {
-                Text("Friend added successfully!")
-                    .foregroundColor(.green)
-                    .padding()
-            }
-            
-            Spacer()
         }
-        .padding()
     }
     
     private func addFriend() {

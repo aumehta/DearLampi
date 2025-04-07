@@ -9,14 +9,14 @@ struct CraftPageView: View {
     @State private var uniqueCode = ""
     @State private var friends: [String] = []
     var currentUsername: String
-
+    
     private let backgrounds = ["bg1", "bg2"]
-    private let alerts = ["Rainbow", "Heartbeat", "Twinkle"]
-
+    private let alerts = ["Rainbo", "Heartbeat", "Twinkle"]
+    
     init(currentUsername: String) {
         self.currentUsername = currentUsername
     }
-
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -51,8 +51,6 @@ struct CraftPageView: View {
                             ForEach(friends, id: \.self) { friend in
                                 Button(action: {
                                     selectedFriend = friend
-                                    print("Selected Friend: \(friend)")  // Print selected friend to console
-                                    
                                 }) {
                                     VStack {
                                         Text(friend)
@@ -66,9 +64,10 @@ struct CraftPageView: View {
                             }
                             Spacer()
                         }
+                        
                     }
                     .padding(.horizontal)
-
+                    
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Background")
                             .font(.custom("Cantora One", size: 18))
@@ -92,7 +91,7 @@ struct CraftPageView: View {
                         }
                     }
                     .padding(.horizontal)
-
+                    
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Alert Light")
                             .font(.custom("Cantora One", size: 18))
@@ -113,10 +112,26 @@ struct CraftPageView: View {
                         }
                     }
                     .padding(.horizontal)
-
+                    
                     Spacer()
                     
-                    NavigationLink(destination: Craft2View(selectedBackground: selectedBackground), isActive: $navigateToCraft2) {
+                    // Replace the existing NavigationLink with this:
+                    NavigationLink(
+                        destination: Group {
+                            if let selectedFriend = selectedFriend,
+                               let friendDetails = DatabaseManager.shared.getFriendDetails(friendUsername: selectedFriend) {
+                                Craft2View(
+                                    selectedBackground: selectedBackground,
+                                    selectedAlert: selectedAlert,
+                                    recipientIP: friendDetails.ipAddress ?? "",
+                                    recipientDeviceID: friendDetails.deviceID ?? ""
+                                )
+                            } else {
+                                Text("Please select a friend before proceeding.")
+                            }
+                        },
+                        isActive: $navigateToCraft2
+                    ) {
                         Button(action: { navigateToCraft2 = true }) {
                             Text("Next")
                                 .font(.custom("Cantora One", size: 18))
@@ -127,18 +142,18 @@ struct CraftPageView: View {
                                 .cornerRadius(10)
                         }
                     }
+                    .padding(.vertical)
                 }
-                .padding(.vertical)
+            }
+            .sheet(isPresented: $showAddFriendModal) {
+                AddFriendModal(uniqueCode: $uniqueCode, friends: $friends, currentUsername: currentUsername, onFriendAdded: fetchFriends)
+            }
+            .onAppear {
+                fetchFriends()
             }
         }
-        .sheet(isPresented: $showAddFriendModal) {
-            AddFriendModal(uniqueCode: $uniqueCode, friends: $friends, currentUsername: currentUsername, onFriendAdded: fetchFriends)
-        }
-        .onAppear {
-            fetchFriends()
-        }
-
     }
+    
     // In CraftPageView
     func fetchFriends() {
         // Fetch friends from the database when the view appears
@@ -157,24 +172,24 @@ struct AddFriendModal: View {
     @State private var errorMessage: String? = nil
     @State private var isFriendAdded: Bool = false
     var onFriendAdded: () -> Void  // Add this callback
-
+    
     var body: some View {
         VStack {
             Text("Insert Unique Code")
                 .font(.title2)
                 .bold()
                 .padding()
-
+            
             TextField("Enter unique code", text: $uniqueCode)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
-
+            
             if let errorMessage = errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
                     .padding()
             }
-
+            
             Button(action: {
                 addFriend()
             }) {
@@ -187,42 +202,42 @@ struct AddFriendModal: View {
                     .cornerRadius(10)
             }
             .padding()
-
+            
             if isFriendAdded {
                 Text("Friend added successfully!")
                     .foregroundColor(.green)
                     .padding()
             }
-
+            
             Spacer()
         }
         .padding()
     }
-
+    
     private func addFriend() {
-         // Get the current user's username (assuming it's stored in UserDefaults or passed into the modal)
-         let currentUsername = currentUsername
-
-         // Try to add the friend
-         if let friend = DatabaseManager.shared.findUser(byUniqueCode: uniqueCode) {
-             let friendUniqueCode = friend[DatabaseManager.shared.uniqueCode]
-             DatabaseManager.shared.addFriend(currentUsername: currentUsername, friendUniqueCode: friendUniqueCode)
-
-             // If friend is added successfully, show a success message
-             isFriendAdded = true
-             errorMessage = nil
-             
-             // Call the callback to refresh the friends list
-             onFriendAdded()
-             
-             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                 presentationMode.wrappedValue.dismiss()
-             }
-         } else {
-             errorMessage = "User with this unique code not found."
-             isFriendAdded = false
-         }
-     }
+        // Get the current user's username (assuming it's stored in UserDefaults or passed into the modal)
+        let currentUsername = currentUsername
+        
+        // Try to add the friend
+        if let friend = DatabaseManager.shared.findUser(byUniqueCode: uniqueCode) {
+            let friendUniqueCode = friend[DatabaseManager.shared.uniqueCode]
+            DatabaseManager.shared.addFriend(currentUsername: currentUsername, friendUniqueCode: friendUniqueCode)
+            
+            // If friend is added successfully, show a success message
+            isFriendAdded = true
+            errorMessage = nil
+            
+            // Call the callback to refresh the friends list
+            onFriendAdded()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                presentationMode.wrappedValue.dismiss()
+            }
+        } else {
+            errorMessage = "User with this unique code not found."
+            isFriendAdded = false
+        }
+    }
 }
 
 
@@ -252,4 +267,3 @@ extension Color {
         )
     }
 }
-

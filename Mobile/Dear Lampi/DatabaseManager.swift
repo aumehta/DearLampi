@@ -56,6 +56,25 @@ class DatabaseManager {
             print("Insert failed: \(error)")
         }
     }
+    
+    func getFriendDetails(friendUsername: String) -> (ipAddress: String?, deviceID: String?)? {
+        do {
+            let query = users.filter(self.username == friendUsername)
+            
+            if let friendRow = try db?.pluck(query) {
+                let ipAddress = friendRow[self.ipAddress]
+                let deviceID = friendRow[self.deviceID]
+                return (ipAddress, deviceID)
+            } else {
+                print("Friend not found in the database.")
+                return nil
+            }
+        } catch {
+            print("Error fetching friend details: \(error)")
+            return nil
+        }
+    }
+
 
     // Fetch users (for testing purposes)
     func fetchUsers() {
@@ -68,6 +87,7 @@ class DatabaseManager {
         }
     }
 
+    
     // Find a user by username
     func findUser(byUniqueCode code: String) -> Row? {
         do {

@@ -22,29 +22,24 @@ class MQTTManager: ObservableObject {
     @Published var receivedMessages: [MQTTMessage] = []
     @Published var customTopic: String = "swift/lampi/custom"  // Default topic
     @Published var messageToSend: String = ""
+    var host: String = ""
+    var port: UInt16
     
     private var mqttClient: CocoaMQTT?
     private let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
     
-    // MQTT settings
-    private var host: String
-    private var port: UInt16
     
-    init(host: String = "172.20.117.149", port: UInt16 = 1883) {
-        self.host = host
+    init( port: UInt16 = 1883) {
         self.port = port
     }
     
-    func connect() {
+    func connect(host:String) {
         let clientID = "SwiftUI_\(deviceID)_\(Int(Date().timeIntervalSince1970))"
+        self.host = host
         
         mqttClient = CocoaMQTT(clientID: clientID, host: host, port: UInt16(port))
         mqttClient?.keepAlive = 60
         mqttClient?.delegate = self
-        
-        // Optional authentication if your broker requires it
-        // mqttClient?.username = "username"
-        // mqttClient?.password = "password"
         
         _ = mqttClient?.connect()
     }
@@ -61,28 +56,38 @@ class MQTTManager: ObservableObject {
         mqttClient?.publish(topic, withString: message, qos: .qos1)
     }
     
-    // Send a simple hello world message to the LAMPI
-    func sendHelloWorld() {
-        publish(message: "Hello from Swift App!", to: "swift/lampi/LAMPI-b827eb23402e")
-    }
-    
-    // Subscribe to LAMPI discovery topic
-    func subscribeToLampiDiscovery() {
-        subscribe(to: "lampi/discovery/+")
-    }
-    // Subscribe only to lampi topics
-    func subscribeToLampiTopics() {
-        subscribe(to: "lampi/discovery/+")  // Discovery messages
-        subscribe(to: "lampi/hello")        // Hello messages from LAMPI
-        subscribe(to: "lampi/status")       // Any status updates from LAMPI
-        subscribe(to: "lampi/config")       // Configuration messages if needed
+    func publishLampiMessage(background: String, alertLight: String, message:String, to topic: String) {
+        // Convert the image to a base64 string
+        guard let image = UIImage(named: background) else {
+            print("Failed to retrieve image from assets with name: \(background)")
+            return
+        }
+        
+        // Convert the image to a base64 string
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("Failed to convert image to JPEG data.")
+            return
+        }
+        let base64ImageString = imageData.base64EncodedString()
+        
+        // Create the payload dictionary
+        let payload: [String: Any] = [
+            "background": base64ImageString,
+            "alert_light": alertLight,
+            "message": message
+        ]
+        
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            print("Failed to serialize JSON payload.")
+            return
+        }
+        
+        mqttClient?.publish(topic, withString: jsonString, qos: .qos1)
+
+        print("Published JSON payload to \(topic): \(jsonString)")
     }
 
-    
-    // Subscribe to hello messages from LAMPI
-    func subscribeToHelloMessages() {
-        subscribe(to: "lampi/hello")
-    }
 }
 
 // MARK: - CocoaMQTT Delegate Extension
@@ -91,7 +96,6 @@ extension MQTTManager: CocoaMQTTDelegate {
         DispatchQueue.main.async {
             if ack == .accept {
                 self.connectionStatus = "Connected to MQTT Broker"
-                self.subscribeToLampiTopics()  // Only subscribe to lampi topics
             } else {
                 self.connectionStatus = "Connection failed: \(ack)"
             }
@@ -104,7 +108,6 @@ extension MQTTManager: CocoaMQTTDelegate {
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didPublishAck id: UInt16) {
-        // Nothing to do here
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {

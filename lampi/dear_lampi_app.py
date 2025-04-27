@@ -2,17 +2,19 @@ from kivy.app import App
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.label import Label
+from kivy.uix.image import AsyncImage
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.uix.image import Image
 from paho.mqtt.client import Client
-from dear_lampi_light_mode import twinkle, stop_led
+from dear_lampi_light_mode import twinkle, rainbow, heartbeat, stop_led
 import base64
 import threading
 import os
 import json
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
 import io
+import imghdr
 
 # This file is setting the mqtt client to listen in on the topic dearLampi/incomingMessage and defines the logic for
 # the screen manager when a new message is received.
@@ -24,10 +26,13 @@ def get_device_id():
 DEVICE_ID_FILENAME = '/sys/class/net/eth0/address'
 DEVICE_ID = get_device_id()
 
-IMAGE_PATH = "/home/pi/dearLampi/lampi/received_images/dearLampi_image_decoded.png"
-MQTT_BROKER = "localhost"
-MQTT_TOPIC = "swift/#"
-MQTT_PORT = 1883
+IMAGE_DIR = "/home/pi/dearLampi/lampi/received_images/"
+BASE_IMAGE_FILENAME = "dearLampi_image_decoded"
+MQTT_BROKER = "ec2-98-82-250-240.compute-1.amazonaws.com"
+#MQTT_BROKER = "localhost"
+MQTT_TOPIC = f"devices/{DEVICE_ID}/swift/lampi"
+MQTT_TOPIC = "dearLampi/incomingMessage"
+MQTT_PORT = 50001
 
 class BouncingLabel(Label):
     def bounce(self):
@@ -68,10 +73,17 @@ class Screen3(Screen):
         return super().on_touch_down(touch)
 
     def update_image(self, dt):
-        """Update the image when entering Screen2"""
-        if os.path.exists(IMAGE_PATH):
-            self.ids.received_image.source = IMAGE_PATH
-            self.ids.received_image.reload()
+        app = App.get_running_app()
+        if app.current_image_path and os.path.exists(app.current_image_path):
+            image_widget = self.ids.received_image
+            image_widget.source = app.current_image_path
+
+            if app.current_image_path.endswith(".gif"):
+                image_widget.anim_delay = 0.05
+            else:
+                image_widget.anim_delay = -1
+
+            image_widget.reload()
 
 # main class
 class dear_lampiApp(App):
@@ -81,6 +93,8 @@ class dear_lampiApp(App):
         sm.add_widget(Screen2(name="incoming message"))
         sm.add_widget(Screen3(name="display message"))
         self.sm = sm
+
+        self.current_image_path = None  # track the latest image path
 
         threading.Thread(target=self.setup_mqtt, daemon=True).start()
         return sm
@@ -95,33 +109,52 @@ class dear_lampiApp(App):
             print("Received on topic:", msg.topic)
             try:
                 payload = json.loads(msg.payload.decode())
-                image_data = payload["background"]
+                image_b64 = payload["background"].replace('\n', '').replace('\r', '')
                 light_mode = payload["alert_light"]
                 message = payload["message"]
 
+                # Decode base64 into bytes
+                image_data = base64.b64decode(image_b64)
+
+                # detect image type (png vs gif)
+                image_type = imghdr.what(None, h=image_data)
+                print(f"Detected image type: {image_type}")
+
+                if image_type == "gif":
+                    extension = "gif"
+                else:
+                    extension = "png"
+
+                IMAGE_PATH = os.path.join(IMAGE_DIR, f"{BASE_IMAGE_FILENAME}.{extension}")
+
                 # decode the image data and save it in the file path
                 with open(IMAGE_PATH, "wb") as img_file:
-                    img_file.write(base64.b64decode(image_data))
+                    img_file.write(image_data)
                 print("Image written to:", IMAGE_PATH)
 
-                # Overlay the message text
-                overlay_text_on_image(IMAGE_PATH, message, IMAGE_PATH)
-                print("Message added to image.")
+                if extension != "gif":
+                    # Overlay the message text
+                    overlay_text_on_image(IMAGE_PATH, message, IMAGE_PATH)
+                    print("Message added to image.")
+                else:
+                    print("Skipping text for gif")
 
-                if light_mode == "twinkle":
+                if light_mode == "Twinkle":
                     twinkle()
 
-                #if light_mode == "rainbow":
-                 #   set_rainbow()
+                elif light_mode == "Rainbow":
+                    rainbow()
+
+                elif light_mode == "Heartbeat":
+                    heartbeat()
+
                 app = App.get_running_app()
                 if app is None:
-                    print("App instance is None — Kivy app may not be running yet")
+                    print("Neither png or gif detected")
                 else:
-                    print("else")
+                    # Switch screen from screensaver to incoming message
+                    app.current_image_path = IMAGE_PATH
                     Clock.schedule_once(lambda dt: app.on_new_message(), 0)
-
-                # Switch screen from screensaver → incoming message
-                #Clock.schedule_once(lambda dt: self.on_new_message())
 
             except Exception as e:
                 print("Error handling image:", e)
@@ -140,9 +173,8 @@ def overlay_text_on_image(image_path, text, output_path):
     image = Image.open(image_path).convert("RGBA")
     draw = ImageDraw.Draw(image)
 
-    # Load font
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=30)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=50)
     except:
         font = ImageFont.load_default()
 
@@ -155,14 +187,6 @@ def overlay_text_on_image(image_path, text, output_path):
     x = (image.width - text_width) // 2
     y = (image.height - text_height) //2
 
-    # Optional: Add a black rectangle behind text for contrast
-    #padding = 10
-    #draw.rectangle(
-     #   [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
-      #  fill=(0, 0, 0, 180)
-    #)
-
-    # Draw the text in white
     draw.text((x, y), text, font=font, fill="black")
 
     # Save the new image

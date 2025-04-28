@@ -33,6 +33,7 @@ struct SettingsPageView: View {
                         .font(.system(size: 22, weight: .bold, design: .monospaced))
                         .foregroundColor(Color(hex: "530000"))
                         .padding()
+                        .frame(maxWidth: .infinity)  // 👉 ADD THIS!
                         .background(Color.white.opacity(0.7))
                         .cornerRadius(15)
                 }

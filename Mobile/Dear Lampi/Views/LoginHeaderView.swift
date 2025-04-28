@@ -32,7 +32,7 @@ struct LoginHeaderView: View {
                         Button(action: {
                             navigateToLogin = true
                         }) {
-                            Text("Login")
+                            Text("Login/Signup")
                                 .font(.custom("Cantora One", size: 18))
                                 .padding()
                                 .frame(width: 150)

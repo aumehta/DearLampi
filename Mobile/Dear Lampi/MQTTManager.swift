@@ -20,8 +20,8 @@ struct MQTTMessage: Identifiable {
 class MQTTManager: ObservableObject {
     @Published var connectionStatus: String = "Disconnected"
     @Published var receivedMessages: [MQTTMessage] = []
-    @Published var customTopic: String = "swift/lampi/custom"  // Default topic
     @Published var messageToSend: String = ""
+    @Published var customTopic: String = "swift/lampi/custom"  // Default topic
     var host: String = ""
     var port: UInt16
     
@@ -29,12 +29,14 @@ class MQTTManager: ObservableObject {
     private let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
     
     
-    init( port: UInt16 = 1883) {
+    init(port: UInt16 = 50001) {
         self.port = port
     }
     
+    
     func connect(host:String) {
         let clientID = "SwiftUI_\(deviceID)_\(Int(Date().timeIntervalSince1970))"
+        mqttClient?.enableSSL = false
         self.host = host
         
         mqttClient = CocoaMQTT(clientID: clientID, host: host, port: UInt16(port))
@@ -56,21 +58,31 @@ class MQTTManager: ObservableObject {
         mqttClient?.publish(topic, withString: message, qos: .qos1)
     }
     
-    func publishLampiMessage(background: String, alertLight: String, message:String, to topic: String) {
-        // Convert the image to a base64 string
-        guard let image = UIImage(named: background) else {
-            print("Failed to retrieve image from assets with name: \(background)")
-            return
+    func publishLampiMessage(background: String, alertLight: String, message: String, to topic: String, isGif: Bool) {
+        print("Publishing message...")
+        
+        var base64ImageString: String = ""
+        
+        if isGif {
+            // If it's a GIF, read it manually from the bundle
+            if let gifURL = Bundle.main.url(forResource: background, withExtension: "gif"),
+               let gifData = try? Data(contentsOf: gifURL) {
+                base64ImageString = gifData.base64EncodedString()
+                print("was able to encode gif")
+            } else {
+                print("Failed to load GIF \(background)")
+                return
+            }
+        } else {
+            // Otherwise, it's a normal image
+            guard let image = UIImage(named: background),
+                  let imageData = image.jpegData(compressionQuality: 0.8) else {
+                print("Failed to load normal image \(background)")
+                return
+            }
+            base64ImageString = imageData.base64EncodedString()
         }
         
-        // Convert the image to a base64 string
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-            print("Failed to convert image to JPEG data.")
-            return
-        }
-        let base64ImageString = imageData.base64EncodedString()
-        
-        // Create the payload dictionary
         let payload: [String: Any] = [
             "background": base64ImageString,
             "alert_light": alertLight,
@@ -84,10 +96,7 @@ class MQTTManager: ObservableObject {
         }
         
         mqttClient?.publish(topic, withString: jsonString, qos: .qos1)
-
-        print("Published JSON payload to \(topic): \(jsonString)")
     }
-
 }
 
 // MARK: - CocoaMQTT Delegate Extension

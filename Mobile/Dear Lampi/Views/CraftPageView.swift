@@ -8,9 +8,19 @@ struct CraftPageView: View {
     @State private var showAddFriendModal = false
     @State private var uniqueCode = ""
     @State private var friends: [String] = []
+    @State private var showGIFsInsteadOfBackgrounds = false
+    @State private var selectedIsGif = false
+
+
+    
+    // New navigation states
+    @State private var navigateToSettings = false
+    @State private var navigateToHistory = false
+    
     var currentUsername: String
     
-    private let backgrounds = ["bg1", "bg2"]
+    private let backgrounds = ["bg1", "bg2 1", "bg3", "bg4", "bg5"]
+    private let gifs = ["Howdy", "HappyBirthday", "callMePenguin", "cheering", "MissYou"]
     private let alerts = ["Rainbow", "Heartbeat", "Twinkle"]
     
     init(currentUsername: String) {
@@ -18,16 +28,30 @@ struct CraftPageView: View {
     }
     
     var body: some View {
-            ZStack {
-                RadialGradient(
-                    gradient: Gradient(colors: [Color(hex: "FF996D"), Color(hex: "F99D9D")]),
-                    center: .center,
-                    startRadius: 0,
-                    endRadius: UIScreen.main.bounds.width
-                )
-                .ignoresSafeArea()
+        ZStack {
+            RadialGradient(
+                gradient: Gradient(colors: [Color(hex: "FF996D"), Color(hex: "F99D9D")]),
+                center: .center,
+                startRadius: 0,
+                endRadius: UIScreen.main.bounds.width
+            )
+            .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
                 
-                VStack(spacing: 20) {
+                // TOP BAR with settings and history buttons
+                HStack {
+                    Button(action: {
+                        navigateToSettings = true
+                    }) {
+                        Image(systemName: "gearshape")
+                            .font(.title2)
+                            .foregroundColor(Color(hex: "530000"))
+                            .padding()
+                    }
+                    
+                    Spacer()
+                    
                     Text("Send a Message")
                         .font(.custom("Cantora One", size: 30))
                         .bold()
@@ -35,49 +59,101 @@ struct CraftPageView: View {
                         .padding(.bottom, 10)
                         .padding(.top, 10)
                     
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("My Friends")
+                    Spacer()
+                    
+                    Button(action: {
+                        navigateToHistory = true
+                    }) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.title2)
+                            .foregroundColor(Color(hex: "530000"))
+                            .padding()
+                    }
+                }
+                .padding(.horizontal)
+                
+                // --- Your existing UI starts here (Friends, Background, Alert Light) ---
+                
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("My Friends")
+                        .font(.custom("Cantora One", size: 18))
+                        .foregroundColor(Color(hex: "530000"))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    HStack(spacing: 15) {
+                        Button(action: { showAddFriendModal.toggle() }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 30, weight: .bold))
+                                .foregroundColor(Color(hex: "530000"))
+                                .frame(width: 70, height: 70)
+                                .background(Color.white.opacity(0.5))
+                                .clipShape(Circle())
+                        }
+                        ForEach(friends, id: \.self) { friend in
+                            Button(action: {
+                                selectedFriend = friend
+                            }) {
+                                VStack {
+                                    Text(friend)
+                                        .font(.custom("Cantora One", size: 16))
+                                        .foregroundColor(Color(hex: "530000"))
+                                }
+                                .frame(width: 70, height: 70)
+                                .background(selectedFriend == friend ? Color.white.opacity(0.5) : Color.white.opacity(0.2))
+                                .clipShape(Circle())
+                            }
+                        }
+                        Spacer()
+                    }
+                    
+                }
+                .padding(.horizontal)
+                
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text(showGIFsInsteadOfBackgrounds ? "GIFs" : "Background")
                             .font(.custom("Cantora One", size: 18))
                             .foregroundColor(Color(hex: "530000"))
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        HStack(spacing: 15) {
-                            Button(action: { showAddFriendModal.toggle() }) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 30, weight: .bold))
-                                    .foregroundColor(Color(hex: "530000"))
-                                    .frame(width: 70, height: 70)
-                                    .background(Color.white.opacity(0.5))
-                                    .clipShape(Circle())
-                            }
-                            ForEach(friends, id: \.self) { friend in
-                                Button(action: {
-                                    selectedFriend = friend
-                                }) {
-                                    VStack {
-                                        Text(friend)
-                                            .font(.custom("Cantora One", size: 16))
-                                            .foregroundColor(Color(hex: "530000"))
-                                    }
-                                    .frame(width: 70, height: 70)
-                                    .background(selectedFriend == friend ? Color.white.opacity(0.5) : Color.white.opacity(0.2))
-                                    .clipShape(Circle())
-                                }
-                            }
-                            Spacer()
+                        Spacer()
+                        
+                        Button(action: {
+                            showGIFsInsteadOfBackgrounds.toggle()
+                        }) {
+                            Text(showGIFsInsteadOfBackgrounds ? "Show Backgrounds" : "Show GIFs")
+                                .font(.custom("Cantora One", size: 14))
+                                .padding(6)
+                                .background(Color.white.opacity(0.6))
+                                .cornerRadius(8)
+                                .foregroundColor(Color(hex: "530000"))
                         }
-                        
                     }
                     .padding(.horizontal)
                     
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Background")
-                            .font(.custom("Cantora One", size: 18))
-                            .foregroundColor(Color(hex: "530000"))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 15) {
+                            if showGIFsInsteadOfBackgrounds {
+                                ForEach(gifs, id: \.self) { gif in
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.white.opacity(0.2)) // Optional light background so you can SEE the frame
+
+                                        GIFView(gifName: gif)
+                                            .frame(width: 80, height: 80)
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    }
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(selectedBackground == gif ? Color.black : Color.clear, lineWidth: 2)
+                                    )
+                                    .frame(width: 80, height: 80)
+                                    .onTapGesture {
+                                        selectedBackground = gif
+                                        selectedIsGif = true
+                                    }
+                                }
+
+                            } else {
                                 ForEach(backgrounds, id: \.self) { bg in
                                     Image(bg)
                                         .resizable()
@@ -87,82 +163,91 @@ struct CraftPageView: View {
                                             RoundedRectangle(cornerRadius: 10)
                                                 .stroke(selectedBackground == bg ? Color.white : Color.clear, lineWidth: 2)
                                         )
-                                        .onTapGesture { selectedBackground = bg }
-                                }
-                                Spacer()
+                                        .onTapGesture {
+                                            selectedBackground = bg
+                                            selectedIsGif = false
+                                        }                                }
                             }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Alert Light")
-                            .font(.custom("Cantora One", size: 18))
-                            .foregroundColor(Color(hex: "530000"))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        HStack(spacing: 15) {
-                            ForEach(alerts, id: \.self) { alert in
-                                Button(action: { selectedAlert = alert }) {
-                                    Text(alert)
-                                        .font(.custom("Cantora One", size: 16))
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .background(selectedAlert == alert ? Color(hex: "530000").opacity(0.8) : Color(hex: "530000").opacity(0.4))
-                                        .cornerRadius(10)
-                                }
-                            }
+                            
                             Spacer()
                         }
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                    
-                    // Replace the existing NavigationLink with this:
-                    NavigationLink(
-                        destination: Group {
-                            if let selectedFriend = selectedFriend,
-                               let friendDetails = DatabaseManager.shared.getFriendDetails(friendUsername: selectedFriend) {
-                                Craft2View(
-                                    selectedBackground: selectedBackground,
-                                    selectedAlert: selectedAlert,
-                                    recipientIP: friendDetails.ipAddress ?? "",
-                                    recipientDeviceID: friendDetails.deviceID ?? ""
-                                )
-                            } else {
-                                Text("Please select a friend before proceeding.")
-                            }
-                        },
-                        isActive: $navigateToCraft2
-                    ) {
-                        Button(action: { navigateToCraft2 = true }) {
-                            Text("Next")
-                                .font(.custom("Cantora One", size: 18))
-                                .padding()
-                                .frame(width: 150)
-                                .background(Color(hex: "530000"))
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-                    }
-                    .padding(.vertical)
                 }
+                .padding(.horizontal)
+                
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Alert Light")
+                        .font(.custom("Cantora One", size: 18))
+                        .foregroundColor(Color(hex: "530000"))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    HStack(spacing: 15) {
+                        ForEach(alerts, id: \.self) { alert in
+                            Button(action: { selectedAlert = alert }) {
+                                Text(alert)
+                                    .font(.custom("Cantora One", size: 16))
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(selectedAlert == alert ? Color(hex: "530000").opacity(0.8) : Color(hex: "530000").opacity(0.4))
+                                    .cornerRadius(10)
+                            }
+                        }
+                        Spacer()
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                NavigationLink(
+                    destination: Group {
+                        if let selectedFriend = selectedFriend,
+                           let friendDetails = DatabaseManager.shared.getFriendDetails(friendUsername: selectedFriend) {
+                            Craft2View(
+                                selectedBackground: selectedBackground,
+                                selectedAlert: selectedAlert,
+                                recipientName: selectedFriend,
+                                recipientDeviceID: friendDetails ?? "",
+                                isGif: selectedIsGif  // <-- ADD THIS!
+                            )
+
+                        } else {
+                            Text("Please select a friend before proceeding.")
+                        }
+                    },
+                    isActive: $navigateToCraft2
+                ) {
+                    Button(action: { navigateToCraft2 = true }) {
+                        Text("Next")
+                            .font(.custom("Cantora One", size: 18))
+                            .padding()
+                            .frame(width: 150)
+                            .background(Color(hex: "530000"))
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                }
+                .padding(.vertical)
             }
-            .sheet(isPresented: $showAddFriendModal) {
-                AddFriendModal(uniqueCode: $uniqueCode, friends: $friends, currentUsername: currentUsername, onFriendAdded: fetchFriends)
-            }
-            .navigationBarBackButtonHidden(true)  // Hide the back button
-            .onAppear {
-                fetchFriends()
-            }
+        }
+        .sheet(isPresented: $showAddFriendModal) {
+            AddFriendModal(uniqueCode: $uniqueCode, friends: $friends, currentUsername: currentUsername, onFriendAdded: fetchFriends)
+        }
+        .background(
+            NavigationLink(destination: SettingsPageView(currentUsername: currentUsername), isActive: $navigateToSettings) { EmptyView() }
+        )
+        .background(
+            NavigationLink(destination: MessageHistoryView(), isActive: $navigateToHistory) { EmptyView() }
+        )
+        .navigationBarBackButtonHidden(true)
+        .onAppear {
+            fetchFriends()
+        }
     }
     
-    // In CraftPageView
     func fetchFriends() {
-        // Fetch friends from the database when the view appears
         friends = DatabaseManager.shared.getFriends(forUsername: currentUsername)
-        print("Friends fetched: \(friends)")  // Debug print to verify the result
+        print("Friends fetched: \(friends)")
     }
 }
 

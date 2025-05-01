@@ -31,7 +31,7 @@ BASE_IMAGE_FILENAME = "dearLampi_image_decoded"
 MQTT_BROKER = "ec2-98-82-250-240.compute-1.amazonaws.com"
 #MQTT_BROKER = "localhost"
 MQTT_TOPIC = f"devices/{DEVICE_ID}/swift/lampi"
-MQTT_TOPIC = "dearLampi/incomingMessage"
+#MQTT_TOPIC = "dearLampi/incomingMessage"
 MQTT_PORT = 50001
 
 class BouncingLabel(Label):

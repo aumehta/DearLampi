@@ -1,20 +1,19 @@
 import SwiftUI
-
+//DearLampi login page
 struct LoginHeaderView: View {
-    @State private var navigateToLogin = false // State to trigger navigation
+    @State private var navigateToLogin = false 
 
     var body: some View {
-        NavigationView { // Wrap the entire VStack in a NavigationView
-            ZStack { // Use ZStack to layer the background and content
+        NavigationView { 
+            ZStack { 
                 
-                // Background gradient
                 RadialGradient(
                     gradient: Gradient(colors: [Color(hex: "FF996D"), Color(hex: "F99D9D")]),
                     center: .center,
                     startRadius: 0,
                     endRadius: UIScreen.main.bounds.width
                 )
-                .ignoresSafeArea() // Ensures the gradient fills the entire screen
+                .ignoresSafeArea()
 
                 VStack(spacing: 20) {
                     Image("dear_lampi_logo")
@@ -27,7 +26,6 @@ struct LoginHeaderView: View {
                         .fontWeight(.heavy)
                         .foregroundColor(Color(hex: "530000"))
                     
-                    // NavigationLink to LoginView
                     NavigationLink(destination: LoginView(), isActive: $navigateToLogin) {
                         Button(action: {
                             navigateToLogin = true

@@ -7,8 +7,7 @@ struct LoginView: View {
     @State private var uniqueCode = UUID().uuidString.prefix(8).description
     @State private var isNavigationActive = false
     @State private var showAlert = false
-    @State private var isSignUp = true // 👈 NEW: Track if we're in SignUp or Login mode
-
+    @State private var isSignUp = true 
     var body: some View {
         ZStack {
             RadialGradient(
@@ -43,7 +42,7 @@ struct LoginView: View {
                         .cornerRadius(10)
                         .foregroundColor(Color(hex: "530000"))
 
-                    if isSignUp { // 👈 Only show Device ID if signing up
+                    if isSignUp { // Only show Device ID if signing up
                         TextField("Enter Device ID", text: $deviceID)
                             .padding()
                             .background(Color.white)
@@ -57,7 +56,7 @@ struct LoginView: View {
 
                     Button(action: {
                         if username.isEmpty || password.isEmpty || (isSignUp && deviceID.isEmpty) {
-                            // 👆 check deviceID only if it's sign up
+                            // check deviceID only if it's sign up
                             showAlert = true
                         } else {
                             if isSignUp {
@@ -101,7 +100,7 @@ struct LoginView: View {
     func saveUser() {
         DatabaseManager.shared.addUser(
             username: username,
-            password: password, // 👈 you must pass password too now
+            password: password, // you must pass password too now
             deviceID: deviceID,
             uniqueCode: uniqueCode
         )

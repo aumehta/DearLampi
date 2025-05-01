@@ -4,7 +4,7 @@
 //
 //  Created by Arohi Mehta on 4/27/25.
 //
-
+//Helper file for showing the animated GIF on the home page
 import SwiftUI
 import WebKit
 

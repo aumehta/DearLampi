@@ -1,11 +1,12 @@
 import SwiftUI
-
+//This file contains the code for the page where the user has the ability to craft the message
 struct Craft2View: View {
     var selectedBackground: String
     var selectedAlert: String
     var recipientName: String
     var recipientDeviceID: String
     var isGif: Bool
+    var currentUsername: String 
 
     @State private var message: String = ""
     @StateObject private var mqttManager = MQTTManager(port: 50001)
@@ -16,7 +17,6 @@ struct Craft2View: View {
             Color(hex: "FFF5F5").ignoresSafeArea()
 
             VStack(spacing: 20) {
-                // Status indicator
                 HStack {
                     Circle()
                         .fill(mqttManager.connectionStatus.contains("Connected") ? Color.green : Color.red)
@@ -28,7 +28,6 @@ struct Craft2View: View {
                 }
                 .padding(.horizontal)
 
-                // Show GIF or Background
                 if isGif {
                     GIFView(gifName: selectedBackground)
                         .frame(width: UIScreen.main.bounds.width * 0.8, height: 300)
@@ -62,7 +61,7 @@ struct Craft2View: View {
 
                     if !isGif {
                         DatabaseManager.shared.saveMessage(
-                            sender: "current_user",   // replace this later with actual user
+                            sender: currentUsername,
                             recipient: recipientName,
                             text: message
                         )

@@ -7,6 +7,7 @@
 import SwiftUI
 struct MessageHistoryView: View {
     @State private var messages: [Message] = []
+    var currentUsername: String  // <-- PASS THIS IN
 
     var body: some View {
         List(messages) { message in
@@ -19,7 +20,9 @@ struct MessageHistoryView: View {
             }
         }
         .onAppear {
-            messages = DatabaseManager.shared.fetchMessages()
+            messages = DatabaseManager.shared.fetchMessages(currentUsername: currentUsername)
+            print(messages)
+            print(currentUsername)
         }
     }
 }

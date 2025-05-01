@@ -1,10 +1,11 @@
 import SwiftUI
 
+//This is the page that contains all of the friends 
 struct FriendsListView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var friends: [String] = []
     
-    var currentUsername: String  // <-- PASS THIS IN
+    var currentUsername: String  
 
     var body: some View {
         ZStack {

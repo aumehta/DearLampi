@@ -1,5 +1,5 @@
 import SwiftUI
-
+//This file contains the code for the main home page
 struct CraftPageView: View {
     @State private var selectedFriend: String? = nil
     @State private var selectedBackground: String = "bg1"
@@ -39,7 +39,6 @@ struct CraftPageView: View {
             
             VStack(spacing: 20) {
                 
-                // TOP BAR with settings and history buttons
                 HStack {
                     Button(action: {
                         navigateToSettings = true
@@ -71,9 +70,7 @@ struct CraftPageView: View {
                     }
                 }
                 .padding(.horizontal)
-                
-                // --- Your existing UI starts here (Friends, Background, Alert Light) ---
-                
+                                
                 VStack(alignment: .leading, spacing: 10) {
                     Text("My Friends")
                         .font(.custom("Cantora One", size: 18))
@@ -136,7 +133,7 @@ struct CraftPageView: View {
                                 ForEach(gifs, id: \.self) { gif in
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 10)
-                                            .fill(Color.white.opacity(0.2)) // Optional light background so you can SEE the frame
+                                            .fill(Color.white.opacity(0.2)) 
 
                                         GIFView(gifName: gif)
                                             .frame(width: 80, height: 80)
@@ -208,7 +205,8 @@ struct CraftPageView: View {
                                 selectedAlert: selectedAlert,
                                 recipientName: selectedFriend,
                                 recipientDeviceID: friendDetails ?? "",
-                                isGif: selectedIsGif  // <-- ADD THIS!
+                                isGif: selectedIsGif,
+                                currentUsername: currentUsername
                             )
 
                         } else {
@@ -237,7 +235,7 @@ struct CraftPageView: View {
             NavigationLink(destination: SettingsPageView(currentUsername: currentUsername), isActive: $navigateToSettings) { EmptyView() }
         )
         .background(
-            NavigationLink(destination: MessageHistoryView(), isActive: $navigateToHistory) { EmptyView() }
+            NavigationLink(destination: MessageHistoryView(currentUsername: currentUsername), isActive: $navigateToHistory) { EmptyView() }
         )
         .navigationBarBackButtonHidden(true)
         .onAppear {
@@ -252,20 +250,17 @@ struct CraftPageView: View {
 }
 
 
-// Modal View for Entering Unique Code
-
 struct AddFriendModal: View {
     @Binding var uniqueCode: String
     @Binding var friends: [String]
-    var currentUsername: String  // Add this line
+    var currentUsername: String  
     @Environment(\.presentationMode) var presentationMode
     @State private var errorMessage: String? = nil
     @State private var isFriendAdded: Bool = false
-    var onFriendAdded: () -> Void  // Add this callback
+    var onFriendAdded: () -> Void  
     
     var body: some View {
         ZStack {
-            // Background gradient
             Color(hex: "FFF5F5")
                             .ignoresSafeArea()
             VStack {
@@ -277,7 +272,7 @@ struct AddFriendModal: View {
                 
                 TextField("Enter unique code", text: $uniqueCode)
                     .padding()
-                    .background(Color.white) // Background color of TextField is white
+                    .background(Color.white) 
                     .cornerRadius(10)
                     .foregroundColor(Color(hex: "530000"))
                 

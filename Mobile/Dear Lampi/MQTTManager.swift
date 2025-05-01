@@ -1,8 +1,7 @@
 import SwiftUI
 import Combine
 import CocoaMQTT
-
-// MARK: - MQTT Message
+//File that contains code for MQTT Manager on the iOS side
 struct MQTTMessage: Identifiable {
     let id = UUID()
     let topic: String
@@ -16,7 +15,6 @@ struct MQTTMessage: Identifiable {
     }
 }
 
-// MARK: - MQTT Manager
 class MQTTManager: ObservableObject {
     @Published var connectionStatus: String = "Disconnected"
     @Published var receivedMessages: [MQTTMessage] = []
@@ -99,7 +97,6 @@ class MQTTManager: ObservableObject {
     }
 }
 
-// MARK: - CocoaMQTT Delegate Extension
 extension MQTTManager: CocoaMQTTDelegate {
     func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
         DispatchQueue.main.async {

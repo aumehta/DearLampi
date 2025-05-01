@@ -1,10 +1,10 @@
 import SwiftUI
-
+//Settings page
 struct SettingsPageView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var isLoggedOut = false
     @State private var showFriends = false
-    @State private var userUniqueCode: String = "" // <-- ADD THIS
+    @State private var userUniqueCode: String = "" 
     var currentUsername: String
 
     var body: some View {
@@ -23,7 +23,7 @@ struct SettingsPageView: View {
                     .foregroundColor(Color(hex: "530000"))
                     .padding(.top, 30)
 
-                // 👇 Card for Unique Code
+                // Card for Unique Code
                 VStack(spacing: 10) {
                     Text("My Unique Code")
                         .font(.custom("Cantora One", size: 22))
@@ -42,7 +42,7 @@ struct SettingsPageView: View {
                 .cornerRadius(20)
                 .padding(.horizontal)
 
-                // 👇 Buttons Section
+                // Buttons Section
                 VStack(spacing: 20) {
                     Button(action: {
                         showFriends = true
@@ -83,7 +83,7 @@ struct SettingsPageView: View {
             .padding()
         }
         .onAppear {
-            // 👇 Fetch unique code when view appears
+            // Fetch unique code when view appears
             if let code = DatabaseManager.shared.getUniqueCode(forUsername: currentUsername) {
                 userUniqueCode = code
             } else {

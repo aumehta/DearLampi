@@ -5,6 +5,8 @@ class DatabaseManager {
     static let shared = DatabaseManager()
     var db: Connection?
 
+
+
     // Table and columns
     let users = Table("users")
     let id = SQLite.Expression<Int64>("id")
@@ -12,7 +14,7 @@ class DatabaseManager {
     let deviceID = SQLite.Expression<String>("device_id")
     let uniqueCode = SQLite.Expression<String>("unique_code")
     let friends = SQLite.Expression<String>("friends") // Stores friends as comma-separated values
-    let password = SQLite.Expression<String>("password") // 👈 NEW
+    let password = SQLite.Expression<String>("password")
     
     let messages = Table("messages")
     let messageID = SQLite.Expression<Int64>("id")
@@ -106,8 +108,6 @@ class DatabaseManager {
         }
     }
 
-
-    // Fetch users (for testing purposes)
     func fetchUsers() {
         do {
             for user in try db!.prepare(users) {
@@ -172,20 +172,6 @@ class DatabaseManager {
         }
         return []
     }
-    func getUniqueCode(forUsername username: String) -> String? {
-        do {
-            let query = users.filter(self.username == username)
-            if let userRow = try db?.pluck(query) {
-                let code = userRow[uniqueCode]
-                print("Unique code for \(username): \(code)")
-                return code
-            }
-        } catch {
-            print("Error fetching unique code for username \(username): \(error)")
-        }
-        return nil
-    }
-
     
     func saveMessage(sender: String, recipient: String, text: String, time: Date = Date()) {
         do {
@@ -202,19 +188,35 @@ class DatabaseManager {
         }
     }
     
-    func fetchMessages() -> [Message] {
+    func getUniqueCode(forUsername username: String) -> String? {
+        do {
+            let query = users.filter(self.username == username)
+            if let userRow = try db?.pluck(query) {
+                let code = userRow[uniqueCode]
+                print("Unique code for \(username): \(code)")
+                return code
+            }
+        } catch {
+            print("Error fetching unique code for username \(username): \(error)")
+        }
+        return nil
+    }
+    
+    func fetchMessages(currentUsername: String) -> [Message] {
         var fetchedMessages: [Message] = []
         do {
             if let db = db {
                 for row in try db.prepare(messages) {
-                    let message = Message(
-                        id: row[messageID],
-                        sender: row[senderUsername],
-                        recipient: row[recipientDeviceID],
-                        text: row[messageText],
-                        timestamp: row[timestamp]
-                    )
-                    fetchedMessages.append(message)
+                    if row[senderUsername] == currentUsername {  // 🛠 Only append if sender matches
+                        let message = Message(
+                            id: row[messageID],
+                            sender: row[senderUsername],
+                            recipient: row[recipientDeviceID],
+                            text: row[messageText],
+                            timestamp: row[timestamp]
+                        )
+                        fetchedMessages.append(message)
+                    }
                 }
             }
         } catch {
@@ -222,9 +224,6 @@ class DatabaseManager {
         }
         return fetchedMessages
     }
-
-
-
     
 }
 

@@ -1,0 +1,71 @@
+#:kivy 1.9
+
+ScreenManager:
+    id: screen_manager
+
+    Screen1:
+        name: "screensaver"
+    
+    Screen2:
+        name: "incoming message"
+
+    Screen3:
+        name: "display message"
+<Screen1>:
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 1, 0.6, 0.427, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        FloatLayout:
+            Image:
+                source: "logos/screensaver_icon.png"
+                size_hint: None, None
+                size: 170, 170
+                pos_hint: {"center_x": 0.5, "center_y": 0.596}
+            Label:
+                id: screensaver_label
+                text: "dearLampi"
+                color: 0.325, 0, 0, 1
+                font_size: 40
+                bold: True
+                pos_hint: {"center_x": 0.5, "center_y": 0.3}
+<Screen2>:
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 1, 0.6, 0.427, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        FloatLayout:
+            Image:
+                source: "logos/email_outline_icon.png"
+                size_hint: None, None
+                size: 190, 190
+                pos_hint: {"center_x": 0.5, "center_y": 0.54}
+            Image:
+                source: "logos/heart_icon.png"
+                size_hint: None, None
+                size: 50, 50  
+                pos_hint: {"center_x": 0.5, "center_y": 0.596}            
+            BouncingLabel:
+                id: bounce_label
+                text: "Open Me!"
+                color: 0.325, 0, 0, 1
+                font_size: 35
+                bold: True
+                pos_hint: {"center_x": 0.5, "center_y": 0.22}        
+
+<Screen3>:
+    BoxLayout:
+        orientation:'vertical'
+        AsyncImage:
+            id: received_image
+            size_hint: 1, 1
+            allow_stretch: True
+            keep_ratio: False

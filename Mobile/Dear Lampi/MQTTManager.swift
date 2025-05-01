@@ -1,8 +1,7 @@
 import SwiftUI
 import Combine
 import CocoaMQTT
-
-// MARK: - MQTT Message
+//File that contains code for MQTT Manager on the iOS side
 struct MQTTMessage: Identifiable {
     let id = UUID()
     let topic: String
@@ -16,35 +15,31 @@ struct MQTTMessage: Identifiable {
     }
 }
 
-// MARK: - MQTT Manager
 class MQTTManager: ObservableObject {
     @Published var connectionStatus: String = "Disconnected"
     @Published var receivedMessages: [MQTTMessage] = []
-    @Published var customTopic: String = "swift/lampi/custom"  // Default topic
     @Published var messageToSend: String = ""
+    @Published var customTopic: String = "swift/lampi/custom"  // Default topic
+    var host: String = ""
+    var port: UInt16
     
     private var mqttClient: CocoaMQTT?
     private let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
     
-    // MQTT settings
-    private var host: String
-    private var port: UInt16
     
-    init(host: String = "172.20.117.149", port: UInt16 = 1883) {
-        self.host = host
+    init(port: UInt16 = 50001) {
         self.port = port
     }
     
-    func connect() {
+    
+    func connect(host:String) {
         let clientID = "SwiftUI_\(deviceID)_\(Int(Date().timeIntervalSince1970))"
+        mqttClient?.enableSSL = false
+        self.host = host
         
         mqttClient = CocoaMQTT(clientID: clientID, host: host, port: UInt16(port))
         mqttClient?.keepAlive = 60
         mqttClient?.delegate = self
-        
-        // Optional authentication if your broker requires it
-        // mqttClient?.username = "username"
-        // mqttClient?.password = "password"
         
         _ = mqttClient?.connect()
     }
@@ -61,37 +56,52 @@ class MQTTManager: ObservableObject {
         mqttClient?.publish(topic, withString: message, qos: .qos1)
     }
     
-    // Send a simple hello world message to the LAMPI
-    func sendHelloWorld() {
-        publish(message: "Hello from Swift App!", to: "swift/lampi/LAMPI-b827eb23402e")
-    }
-    
-    // Subscribe to LAMPI discovery topic
-    func subscribeToLampiDiscovery() {
-        subscribe(to: "lampi/discovery/+")
-    }
-    // Subscribe only to lampi topics
-    func subscribeToLampiTopics() {
-        subscribe(to: "lampi/discovery/+")  // Discovery messages
-        subscribe(to: "lampi/hello")        // Hello messages from LAMPI
-        subscribe(to: "lampi/status")       // Any status updates from LAMPI
-        subscribe(to: "lampi/config")       // Configuration messages if needed
-    }
-
-    
-    // Subscribe to hello messages from LAMPI
-    func subscribeToHelloMessages() {
-        subscribe(to: "lampi/hello")
+    func publishLampiMessage(background: String, alertLight: String, message: String, to topic: String, isGif: Bool) {
+        print("Publishing message...")
+        
+        var base64ImageString: String = ""
+        
+        if isGif {
+            // If it's a GIF, read it manually from the bundle
+            if let gifURL = Bundle.main.url(forResource: background, withExtension: "gif"),
+               let gifData = try? Data(contentsOf: gifURL) {
+                base64ImageString = gifData.base64EncodedString()
+                print("was able to encode gif")
+            } else {
+                print("Failed to load GIF \(background)")
+                return
+            }
+        } else {
+            // Otherwise, it's a normal image
+            guard let image = UIImage(named: background),
+                  let imageData = image.jpegData(compressionQuality: 0.8) else {
+                print("Failed to load normal image \(background)")
+                return
+            }
+            base64ImageString = imageData.base64EncodedString()
+        }
+        
+        let payload: [String: Any] = [
+            "background": base64ImageString,
+            "alert_light": alertLight,
+            "message": message
+        ]
+        
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            print("Failed to serialize JSON payload.")
+            return
+        }
+        
+        mqttClient?.publish(topic, withString: jsonString, qos: .qos1)
     }
 }
 
-// MARK: - CocoaMQTT Delegate Extension
 extension MQTTManager: CocoaMQTTDelegate {
     func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
         DispatchQueue.main.async {
             if ack == .accept {
                 self.connectionStatus = "Connected to MQTT Broker"
-                self.subscribeToLampiTopics()  // Only subscribe to lampi topics
             } else {
                 self.connectionStatus = "Connection failed: \(ack)"
             }
@@ -104,7 +114,6 @@ extension MQTTManager: CocoaMQTTDelegate {
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didPublishAck id: UInt16) {
-        // Nothing to do here
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
